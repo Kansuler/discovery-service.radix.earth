@@ -9,6 +9,8 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ValidatorModel struct {
@@ -36,6 +38,25 @@ type ValidatorModel struct {
 	ISP                     string    `json:"isp"`
 	Organisation            string    `json:"org"`
 	LastUpdated             time.Time `json:"lastUpdated"`
+	ManualLocationData      bool      `json:"manualLocationData"`
+}
+
+type partialValidatorModel struct {
+	TotalDeligatedStake     string    `json:"totalDelegatedStake"`
+	UptimePercentage        string    `json:"uptimePercentage"`
+	ProposalsMissed         int64     `json:"proposalsMissed"`
+	Address                 string    `json:"address"`
+	InfoURL                 string    `json:"infoURL"`
+	OwnerDelegation         string    `json:"ownerDeligation"`
+	Name                    string    `json:"name"`
+	ValidatorFee            string    `json:"validatorFee"`
+	Registered              bool      `json:"registered"`
+	OwnerAddress            string    `json:"ownerAddress"`
+	IsExternalStakeAccepted bool      `json:"isExternalStakeAccepted"`
+	ProposalsCompleted      int64     `json:"proposalsCompleted"`
+	NodeAddress             string    `json:"nodeAddress"`
+	NodeMatchFound          bool      `json:"nodeMatchFound"`
+	LastUpdated             time.Time `json:"lastUpdated"`
 }
 
 func PublishValidators(validators []ValidatorModel) error {
@@ -46,16 +67,51 @@ func PublishValidators(validators []ValidatorModel) error {
 		return err
 	}
 
+	defer client.Close()
+
 	for _, validator := range validators {
 		entry := client.Doc(fmt.Sprintf("Validators/%s", validator.Address))
 
-		var err error
-		if validator.NodeMatchFound {
-			_, err = entry.Set(ctx, validator)
-		} else {
+		validatorSnapshot, err := entry.Get(ctx)
+		if status.Code(err) == codes.NotFound {
 			entry.Create(ctx, validator)
+			continue
 		}
 
+		var validatorData ValidatorModel
+
+		err = validatorSnapshot.DataTo(&validatorData)
+		if err != nil {
+			log.Error().Err(err).Msgf("could not scan validator data to model")
+			continue
+		}
+
+		if validatorData.ManualLocationData {
+			_, err = entry.Set(ctx, partialValidatorModel{
+				TotalDeligatedStake:     validator.TotalDeligatedStake,
+				UptimePercentage:        validator.UptimePercentage,
+				ProposalsMissed:         validator.ProposalsMissed,
+				InfoURL:                 validator.InfoURL,
+				OwnerDelegation:         validator.OwnerDelegation,
+				Name:                    validator.Name,
+				ValidatorFee:            validator.ValidatorFee,
+				Registered:              validator.Registered,
+				OwnerAddress:            validator.OwnerAddress,
+				IsExternalStakeAccepted: validator.IsExternalStakeAccepted,
+				ProposalsCompleted:      validator.ProposalsCompleted,
+				NodeAddress:             validator.NodeAddress,
+				NodeMatchFound:          validator.NodeMatchFound,
+				LastUpdated:             validator.LastUpdated,
+			})
+
+			if err != nil {
+				log.Error().Err(err).Msgf("could not update validator with partial data")
+			}
+
+			continue
+		}
+
+		_, err = entry.Set(ctx, validator)
 		if err != nil {
 			log.Error().Err(err).Msgf("could not save validator %s to database", validator.Name)
 		}
