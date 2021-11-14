@@ -39,6 +39,7 @@ type ValidatorModel struct {
 	Organisation            string    `json:"org"`
 	LastUpdated             time.Time `json:"lastUpdated"`
 	ManualLocationData      bool      `json:"manualLocationData"`
+	DisplayNode             bool      `json:"displayNode"`
 }
 
 func PublishValidators(validators []ValidatorModel) error {
@@ -95,6 +96,7 @@ func PublishValidators(validators []ValidatorModel) error {
 				Organisation:            validatorData.Organisation,
 				LastUpdated:             validator.LastUpdated,
 				ManualLocationData:      validatorData.ManualLocationData,
+				DisplayNode:             validator.DisplayNode,
 			})
 
 			if err != nil {
