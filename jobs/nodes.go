@@ -56,7 +56,7 @@ func Nodes() {
 			IsExternalStakeAccepted: validator.IsExternalStakeAccepted,
 			ProposalsCompleted:      validator.ProposalsCompleted,
 			LastUpdated:             time.Now(),
-			DisplayNode:             validator.UptimePercentage != "0.00" && validator.UptimePercentage != "0",
+			DisplayNode:             validator.UptimePercentage != "0.00" && validator.TotalDeligatedStake != "0",
 		})
 	}
 
