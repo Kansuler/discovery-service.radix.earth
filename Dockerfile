@@ -1,5 +1,5 @@
 # Build server stage
-FROM golang:1.17.1 as Builder
+FROM golang:1.17.3 as Builder
 WORKDIR /build
 ENV CGO_ENABLED 0
 ENV GOOS linux
