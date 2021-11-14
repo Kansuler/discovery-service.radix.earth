@@ -41,24 +41,6 @@ type ValidatorModel struct {
 	ManualLocationData      bool      `json:"manualLocationData"`
 }
 
-type partialValidatorModel struct {
-	TotalDeligatedStake     string    `json:"totalDelegatedStake"`
-	UptimePercentage        string    `json:"uptimePercentage"`
-	ProposalsMissed         int64     `json:"proposalsMissed"`
-	Address                 string    `json:"address"`
-	InfoURL                 string    `json:"infoURL"`
-	OwnerDelegation         string    `json:"ownerDeligation"`
-	Name                    string    `json:"name"`
-	ValidatorFee            string    `json:"validatorFee"`
-	Registered              bool      `json:"registered"`
-	OwnerAddress            string    `json:"ownerAddress"`
-	IsExternalStakeAccepted bool      `json:"isExternalStakeAccepted"`
-	ProposalsCompleted      int64     `json:"proposalsCompleted"`
-	NodeAddress             string    `json:"nodeAddress"`
-	NodeMatchFound          bool      `json:"nodeMatchFound"`
-	LastUpdated             time.Time `json:"lastUpdated"`
-}
-
 func PublishValidators(validators []ValidatorModel) error {
 	ctx := context.Background()
 	sa := option.WithCredentialsFile("./service-account.json")
@@ -87,10 +69,12 @@ func PublishValidators(validators []ValidatorModel) error {
 		}
 
 		if validatorData.ManualLocationData {
-			_, err = entry.Set(ctx, partialValidatorModel{
+			_, err = entry.Set(ctx, ValidatorModel{
+				PublicKey:               validator.PublicKey,
 				TotalDeligatedStake:     validator.TotalDeligatedStake,
 				UptimePercentage:        validator.UptimePercentage,
 				ProposalsMissed:         validator.ProposalsMissed,
+				Address:                 validator.Address,
 				InfoURL:                 validator.InfoURL,
 				OwnerDelegation:         validator.OwnerDelegation,
 				Name:                    validator.Name,
@@ -99,9 +83,18 @@ func PublishValidators(validators []ValidatorModel) error {
 				OwnerAddress:            validator.OwnerAddress,
 				IsExternalStakeAccepted: validator.IsExternalStakeAccepted,
 				ProposalsCompleted:      validator.ProposalsCompleted,
+				IP:                      validatorData.IP,
 				NodeAddress:             validator.NodeAddress,
 				NodeMatchFound:          validator.NodeMatchFound,
+				Latitude:                validatorData.Latitude,
+				Longitude:               validatorData.Longitude,
+				Country:                 validatorData.Country,
+				City:                    validatorData.City,
+				Region:                  validatorData.Region,
+				ISP:                     validatorData.ISP,
+				Organisation:            validatorData.Organisation,
 				LastUpdated:             validator.LastUpdated,
+				ManualLocationData:      validatorData.ManualLocationData,
 			})
 
 			if err != nil {
