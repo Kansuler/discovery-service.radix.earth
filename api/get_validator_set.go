@@ -13,7 +13,7 @@ type Validator struct {
 	ProposalsMissed         int64  `json:"proposalsMissed"`
 	Address                 string `json:"address"`
 	InfoURL                 string `json:"infoURL"`
-	OwnerDelegation         string `json:"ownerDeligation"`
+	OwnerDelegation         string `json:"ownerDelegation"`
 	Name                    string `json:"name"`
 	ValidatorFee            string `json:"validatorFee"`
 	Registered              bool   `json:"registered"`
